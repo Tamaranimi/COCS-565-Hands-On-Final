@@ -1,24 +1,44 @@
 const { test, expect } = require("@playwright/test");
 const { loginIfNeeded } = require("./helpers/auth");
 
+async function clickFirstVisible(...locators) {
+  for (const loc of locators) {
+    if (await loc.isVisible().catch(() => false)) {
+      await loc.click();
+      return;
+    }
+  }
+  throw new Error("None of the provided locators were visible.");
+}
+
 test("C5HOF-3: Delete Link", async ({ page }) => {
   await loginIfNeeded(page);
 
-  await page.goto("/links");
-  await page.waitForTimeout(800);
+  const linkName = `DeleteMe-${Date.now()}`;
 
-  // Pick the first row/card and delete (adjust if not a table)
-  const row = page.locator("tr").nth(1);
-  const rowText = await row.innerText();
+  await page.getByRole("button", { name: /quick apps/i }).click();
+  await page.getByRole("link", { name: /quick links/i }).click();
 
-  await row.getByRole("button", { name: /delete|remove/i }).click();
-  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: /new link/i }).click();
+  await page.getByRole("textbox", { name: /enter link name/i }).fill(linkName);
+  await page.getByRole("button", { name: /create link/i }).click();
 
-  const confirmBtn = page.getByRole("button", { name: /confirm|yes|delete/i });
-  if (await confirmBtn.count()) await confirmBtn.click();
+  const row = page.getByRole("row", { name: new RegExp(linkName) });
+  await expect(row).toBeVisible();
 
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(800);
+  await clickFirstVisible(
+    row.getByLabel(/options|actions|more/i),
+    row.getByRole("button", { name: /options|actions|more/i })
+  );
 
-  await expect(page.getByText(rowText)).toHaveCount(0);
+  await clickFirstVisible(
+    page.getByRole("menuitem", { name: /delete|remove/i }),
+    page.getByRole("button", { name: /delete|remove/i })
+  );
+
+  // Confirm modal (if shown)
+  const confirm = page.getByRole("button", { name: /confirm|delete|yes/i });
+  if (await confirm.isVisible().catch(() => false)) await confirm.click();
+
+  await expect(page.getByRole("row", { name: new RegExp(linkName) })).toHaveCount(0);
 });

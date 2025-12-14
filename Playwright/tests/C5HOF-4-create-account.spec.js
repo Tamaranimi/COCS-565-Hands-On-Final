@@ -9,8 +9,11 @@ test("C5HOF-4: Create Account (Company)", async ({ page }) => {
   await page.waitForTimeout(800);
 
   // Click Create Account / Create Company
-  await page.getByRole("button", { name: /create account|create company|new company/i }).click();
-  await page.waitForTimeout(600);
+  await clickFirstVisible(
+  page.getByRole("link", { name: /company|companies|organization|workspace/i }),
+  page.getByRole("button", { name: /company|companies|organization|workspace/i })
+);
+
 
   // Fill required fields (adjust labels)
   await page.getByLabel(/company name|name/i).fill(`Company ${Date.now()}`);
