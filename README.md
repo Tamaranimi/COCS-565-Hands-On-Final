@@ -1,6 +1,4 @@
 # Grabdocs-e2e-Tests---Hands-on-Final
-Testing Features with Playwright 
-# COSC 369: Hands-On Final — Group 3
 
 An end-to-end (E2E) testing assignment for **GrabDocs**, built with **Cypress** and **Playwright** to test complete user workflows.
 
