@@ -17,14 +17,19 @@ An end-to-end (E2E) testing assignment for **GrabDocs**, built with **Cypress** 
 ## 🛠️ Tools
 - Cypress  
 - Playwright
-- code to run the Tests
-- cd C:\Users\DELL\COCS-565-Hands-On-Final\Playwright
-set SLOWMO_MS=900
+- code to run the Tests in command prompt
+-cd /d C:\Users\DELL\COCS-565-Hands-On-Final\Playwright
 npx playwright test -c .\playwright.config.js --grep "C5HOF-1|C5HOF-2|C5HOF-3" --headed --workers=1
+
 Code to show the report
 npx playwright show-report
 
+code to run the Tests in powershell
+$env:SLOWMO_MS="900"
+npx playwright test -c .\playwright.config.js --grep "C5HOF-1|C5HOF-2|C5HOF-3" --headed --workers=1
 
+Code to show the report
+npx playwright show-report
 
 ---
 
