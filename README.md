@@ -16,6 +16,15 @@ An end-to-end (E2E) testing assignment for **GrabDocs**, built with **Cypress** 
 
 ## 🛠️ Tools
 - Cypress  
+code to run tests in cypress
+cd C:\Users\DELL\COCS-565-Hands-On-Final\Cypress
+npx cypress open
+
+code to run it in the terminal 
+cd C:\Users\DELL\COCS-565-Hands-On-Final\Cypress
+npx cypress run --spec "cypress/e2e/C5HOF-6-create-link.cy.js,cypress/e2e/C5HOF-7-edit-link.cy.js,cypress/e2e/C5HOF-8-delete-link.cy.js"
+
+
 - Playwright
 - code to run the Tests in command prompt
 -cd /d C:\Users\DELL\COCS-565-Hands-On-Final\Playwright
