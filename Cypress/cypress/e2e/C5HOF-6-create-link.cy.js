@@ -1,3 +1,4 @@
+
 describe("C5HOF-6: Create Link (Cypress)", () => {
   beforeEach(() => {
     cy.loginGrabDocs();
