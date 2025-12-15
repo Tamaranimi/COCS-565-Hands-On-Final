@@ -1,18 +1,12 @@
 const path = require("path");
+const { defineConfig } = require("@playwright/test");
+
+// Load Playwright/.env reliably for config
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
-
-const { defineConfig } = require("@playwright/test");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
-
-
-module.exports = {
-  testDir: "./tests",
-  testMatch: "**/*.spec.js",
+module.exports = defineConfig({
   use: {
     baseURL: process.env.BASE_URL,
-    storageState: ".auth/storageState.json",
+    storageState: path.join(__dirname, "tests", ".auth", "state.json"),
   },
-};
-
-
+});

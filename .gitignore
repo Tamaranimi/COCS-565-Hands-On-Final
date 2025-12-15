@@ -142,8 +142,14 @@ node_modules/
 Playwright/node_modules/
 
 # Playwright outputs
+Playwright/tests/.auth/
 Playwright/test-results/
 Playwright/playwright-report/
 Playwright/.env
 Playwright/.auth/
+Playwright/.env
+Cypress/.env
+node_modules/
+test-results/
+playwright-report/
 

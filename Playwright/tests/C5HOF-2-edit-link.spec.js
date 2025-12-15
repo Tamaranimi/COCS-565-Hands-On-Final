@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const { loginIfNeeded } = require("./helpers/auth");
 
+// Waits up to 15s for ANY of the locators to become visible, then clicks the first visible one
 async function clickFirstVisible(...locators) {
   const deadline = Date.now() + 15000;
   let lastError = "";
@@ -22,37 +23,23 @@ async function clickFirstVisible(...locators) {
   throw new Error("None of the provided locators were visible after 15s.\n" + lastError);
 }
 
-// Opens Quick Links reliably even if sidebar is collapsed or Quick Links is link/button/text
-async function openQuickLinks(page) {
+// ✅ Your UI shows: Quick Apps (button) then Links (button)
+async function openLinks(page) {
   await page.waitForLoadState("domcontentloaded");
 
-  
-  await clickFirstVisible(
-    page.getByRole("button", { name: /menu|navigation|sidebar|open/i }),
-    page.locator('[aria-label*="menu" i], [aria-label*="navigation" i]').first()
-  ).catch(() => {});
-
-  const quickLinksCandidates = [
-    page.getByRole("link", { name: /quick links/i }),
-    page.getByRole("button", { name: /quick links/i }),
-    page.getByText(/quick links/i).first(),
-  ];
-
-  
-  try {
-    await clickFirstVisible(...quickLinksCandidates);
-    return;
-  } catch (_) {
-    
-    await clickFirstVisible(
-      page.getByText(/quick apps/i).first(),
-      page.locator('button:has-text("Quick Apps")').first(),
-      page.locator('[role="button"]:has-text("Quick Apps")').first()
-    ).catch(() => {});
+  // If Quick Apps button exists, click it (safe if it just toggles/does nothing)
+  const quickAppsBtn = page.getByRole("button", { name: /quick apps/i });
+  if (await quickAppsBtn.isVisible().catch(() => false)) {
+    await quickAppsBtn.click().catch(() => {});
   }
 
-  
-  await clickFirstVisible(...quickLinksCandidates);
+  // In your snapshot, "Links" is a BUTTON in the Quick Apps grid
+  await clickFirstVisible(
+    page.getByRole("button", { name: /^links$/i }),
+    page.getByRole("button", { name: /links/i }),
+    page.getByRole("link", { name: /links/i }),
+    page.getByText(/^links$/i).first()
+  );
 }
 
 test("C5HOF-2: Edit Link", async ({ page }) => {
@@ -60,23 +47,22 @@ test("C5HOF-2: Edit Link", async ({ page }) => {
 
   await loginIfNeeded(page);
 
-  // Go to Quick Links page
-  await openQuickLinks(page);
+  await openLinks(page);
 
-  // Ensure Quick Links page is ready
-  await page
-    .getByRole("button", { name: /new link/i })
-    .waitFor({ state: "visible", timeout: 20000 });
+  // Wait for Links page to be ready
+  await page.getByRole("button", { name: /new link/i }).waitFor({
+    state: "visible",
+    timeout: 20000,
+  });
 
   const linkName = `EditMe-${Date.now()}`;
   const updatedName = `Edited-${Date.now()}`;
 
-  // Create a link first (so the test is independent)
+  // Create link first (so the test is independent)
   await page.getByRole("button", { name: /new link/i }).click();
   await page.getByRole("textbox", { name: /enter link name/i }).fill(linkName);
   await page.getByRole("button", { name: /create link/i }).click();
 
-  // Find the created row
   const row = page.getByRole("row", { name: new RegExp(linkName, "i") });
   await expect(row).toBeVisible({ timeout: 20000 });
 
@@ -94,16 +80,15 @@ test("C5HOF-2: Edit Link", async ({ page }) => {
     page.getByText(/edit|rename/i).first()
   );
 
-  // Update name and save
   await page.getByRole("textbox", { name: /enter link name/i }).fill(updatedName);
 
+  // Save/Update
   await clickFirstVisible(
     page.getByRole("button", { name: /update|save/i }),
     page.getByRole("menuitem", { name: /update|save/i }),
     page.getByText(/update|save/i).first()
   );
 
-  // Assert updated row is visible
   await expect(page.getByRole("row", { name: new RegExp(updatedName, "i") })).toBeVisible({
     timeout: 20000,
   });

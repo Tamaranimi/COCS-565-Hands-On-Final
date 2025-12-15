@@ -1,17 +1,21 @@
 const path = require("path");
 
-// Always load the SAME .env file, even inside Playwright worker processes
-require("dotenv").config({ path: path.join(__dirname, "..", "..", ".env") });
+// ✅ Force-load Playwright/.env reliably (also works in worker processes)
+require("dotenv").config({
+  path: path.join(__dirname, "..", "..", "..", ".env"), // Playwright/.env
+  override: true,
+});
 
 async function loginIfNeeded(page) {
   const baseURL = process.env.BASE_URL;
   const email = process.env.EMAIL;
   const password = process.env.PASSWORD;
+  const otp = process.env.OTP || "335577";
 
   if (!baseURL) throw new Error("Missing BASE_URL in Playwright/.env");
   if (!email || !password) throw new Error("Missing EMAIL or PASSWORD in Playwright/.env");
 
-  // Go to login page using absolute URL (doesn't depend on baseURL config)
+  // Go to login page (absolute URL so it doesn't depend on baseURL config)
   await page.goto(new URL("/login", baseURL).toString(), { waitUntil: "domcontentloaded" });
 
   await page.getByPlaceholder(/username, email or phone/i).fill(email);
@@ -19,26 +23,42 @@ async function loginIfNeeded(page) {
 
   await page.getByRole("button", { name: /^sign in$/i }).click();
 
-  // Wait until we're NOT on /login anymore (works for SPA apps too)
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 }).catch(() => {});
+  // ✅ Handle OTP if it appears
+  const otpInputCandidates = [
+    page.getByRole("textbox", { name: /enter 6-digit code|otp|verification code/i }),
+    page.locator('input[autocomplete="one-time-code"]').first(),
+    page.locator('input[type="tel"]').first(),
+    page.locator('input[name*="otp" i]').first(),
+  ];
 
-  // Optional OTP handling (only if your app shows it)
-  const otpBox = page.getByRole("textbox", { name: /enter 6-digit code/i });
-  if (await otpBox.isVisible().catch(() => false)) {
-    const otp = process.env.OTP;
-    if (!otp) throw new Error("OTP screen appeared but OTP is missing in Playwright/.env");
-    await otpBox.fill(otp);
-
-    // Try common confirm button labels
-    await page.getByRole("button", { name: /verify|continue|submit|confirm/i }).click();
-    await page.waitForLoadState("domcontentloaded");
-
+  let otpFilled = false;
+  for (const loc of otpInputCandidates) {
+    try {
+      await loc.waitFor({ state: "visible", timeout: 8000 });
+      await loc.fill(otp);
+      otpFilled = true;
+      break;
+    } catch (_) {}
   }
 
-  // Final safety: if still on login, fail with a clear message
-  if (page.url().includes("/login")) {
-    throw new Error("Login did not complete (still on /login). Check credentials/OTP/selectors.");
+  if (otpFilled) {
+    // Click a confirm button if your UI has one (tries common labels)
+    const confirmBtnCandidates = [
+      page.getByRole("button", { name: /verify|continue|submit|confirm/i }),
+      page.getByRole("button", { name: /next/i }),
+    ];
+
+    for (const btn of confirmBtnCandidates) {
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click();
+        break;
+      }
+    }
   }
+
+  // ✅ Wait until login completes (no more /login in URL)
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 });
+  await page.waitForLoadState("domcontentloaded");
 }
 
 module.exports = { loginIfNeeded };
