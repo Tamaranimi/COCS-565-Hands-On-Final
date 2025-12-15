@@ -5,9 +5,7 @@ An end-to-end (E2E) testing assignment for **GrabDocs**, built with **Cypress** 
 ---
 
 ## 📚 Course Information
-- **Course:** COSC 369-101 / 565-101  
-- **Instructor:** Dr. Francis Onodueze  
-- **Due Date:** **December 15, 2025**
+- **Course:** 565-101
 
 ---
 
