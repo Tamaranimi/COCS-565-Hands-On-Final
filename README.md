@@ -43,7 +43,7 @@ npx playwright show-report
 ---
 
 ## 🌟 Features Tested
-- Company  
+- Company (error recorded)
 - Quick Links   
 
 ---
